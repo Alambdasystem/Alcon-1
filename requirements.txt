@@ -1,0 +1,13 @@
+Flask==2.0.3
+requests
+azure-storage-blob
+azure-ai-formrecognizer
+azure-core
+PyMuPDF
+gunicorn
+Werkzeug>=2.0.0,<2.1.0
+openai
+PyPDF2
+nltk
+flasgger==0.9.5
+markupsafe>=2.0.0,<2.1.0

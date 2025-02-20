@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- Font Awesome icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+  <title>Design GPT</title>
+  <style>
+    /* General Styles */
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #003595;
+    }
+    
+    /* Main Panel Styles */
+    #mainPanel {
+      flex: 1;
+      overflow-y: auto;
+      position: relative; /* For absolute positioning of toggle & icon */
+      padding-right: 60px; /* Space for the toggle button */
+    }
+    
+    /* Side Panel Toggle Button (in mainPanel) */
+    #sidePanelToggleButton {
+      position: absolute;
+      top: 20px;
+      right: 100px;
+      z-index: 1000;
+      background: #003595;
+      color: #fff;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      display: none; /* Shown after login */
+    }
+    
+    #sidePanelToggleButton:hover {
+      background: #002366;
+    }
+    
+    /* Account Icon (anchored at top right of mainPanel) */
+    #accountIcon {
+      position: absolute;
+      top: 20px;
+      right: 60px; /* Adjusted to not overlap the toggle button */
+      cursor: pointer;
+      font-size: 24px;
+      color: #fde001;
+      z-index: 1000;
+    }
+    
+    /* Chat History Styles */
+    #chatHistory {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fafafa;
+      margin-bottom: 10px;
+      padding: 20px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    
+    .chat-bubble {
+      margin-bottom: 6px;
+      padding: 8px;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+    }
+    
+    .user-bubble {
+      background-color: #dff0d8;
+      align-self: flex-start;
+    }
+    
+    .assistant-bubble {
+      background-color: #d9edf7;
+      align-self: flex-end;
+    }
+    
+    /* Input Container Styles */
+    #inputContainer {
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+    }
+    
+    #userInput {
+      width: 100%;
+      height: 60px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      border-radius: 4px;
+      padding: 8px;
+    }
+    
+    #sendBtn {
+      margin-top: 8px;
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      background: #007BFF;
+      color: #fff;
+      cursor: pointer;
+      font-size: 1rem;
+      width: 150px;
+    }
+    
+    #sendBtn:hover {
+      background: #0056b3;
+    }
+    
+    .feedback-container span {
+      font-size: 20px;
+      cursor: pointer;
+      margin-right: 5px;
+      color: #ccc;
+    }
+    
+    .feedback-container span.filled {
+      color: #FFD700;
+    }
+    
+    h1 {
+      color: #fde001;
+    }
+    
+    p {
+      font-size: 16px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    
+    #subheading {
+      color: #fff;
+    }
+    
+    /* Pulsate Animation for loading state */
+    @keyframes pulsate {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+    
+    .pulsate {
+      animation: pulsate 1s infinite;
+    }
+    
+    /* Note Styling */
+    #note {
+      color: #fff;
+      font-style: italic;
+      margin-bottom: 20px;
+    }
+    
+    /* Side Panel Styles */
+    #sidePanel {
+      width: 300px;
+      flex-shrink: 0;
+      background: #f4f4f4;
+      border-left: 1px solid #ccc;
+      padding: 20px;
+      box-sizing: border-box;
+      overflow-y: auto;
+      margin-left: 20px;
+    }
+    
+    #sidePanel h3 {
+      margin-top: 0;
+      color: #003595;
+    }
+    
+    #chatList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    #chatList li {
+      background: #fff;
+      margin-bottom: 8px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    #chatList li:hover {
+      background: #e9e9e9;
+    }
+    
+    /* New Chat Button Styles */
+    #newChatBtn {
+      display: none; /* Hidden until login */
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: #003595;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    
+    #newChatBtn:hover {
+      background: #002366;
+    }
+    
+    /* Login Panel Styles */
+    #loginOptions {
+      display: block;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    #loginOptions h3 {
+      margin-top: 0;
+      color: #003595;
+      text-align: center;
+    }
+    
+    #loginForm {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    #loginForm label {
+      margin-bottom: 5px;
+      font-weight: bold;
+      color: #003595;
+    }
+    
+    #loginForm input {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+    
+    #loginForm button {
+      padding: 10px;
+      background-color: #003595;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-bottom: 10px;
+    }
+    
+    #loginForm button:hover {
+      background-color: #002366;
+    }
+    
+    /* Logout Button Styles */
+    #logoutButton {
+      padding: 10px;
+      background-color: #FF4136;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      width: 100%;
+      margin-bottom: 20px;
+      display: none;
+    }
+    
+    #logoutButton:hover {
+      background-color: #C0392B;
+    }
+    
+    /* Admin Panel Styles (hidden by default) */
+    #adminPanel {
+      background: #e9e9e9;
+      padding: 10px;
+      margin-top: 20px;
+      border-radius: 4px;
+      display: none;
+    }
+    
+    #adminPanel button {
+      padding: 6px 12px;
+      margin-bottom: 6px;
+      background-color: #003595;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    
+    #adminPanel button:hover {
+      background-color: #002366;
+    }
+    
+    #registerFormContainer {
+      margin-top: 10px;
+      display: none;
+      background: #fff;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    
+    #registerFormContainer label {
+      font-weight: bold;
+      color: #003595;
+      display: block;
+      margin-top: 6px;
+    }
+    
+    #registerFormContainer input {
+      padding: 8px;
+      width: 100%;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div id="mainPanel">
+    <h1 id="heading">Hi, I'm Design-GPT!</h1>
+    <p id="subheading">
+      Thanks for stopping by.
+      I’m your Gen-AI powered Design Assistant, here to help with your design queries.
+      Click the chat icon to ask your question(s).
+    </p>
+    <p id="note">
+      Note: I currently hold info around Lens Formulations, but in the future I'll have access to more data.
+    </p>
+    <div id="chatHistory">
+      <!-- Chat history messages will appear here -->
+    </div>
+    <div id="inputContainer">
+      <textarea id="userInput" placeholder="Type your design-related question here..."></textarea>
+      <button id="sendBtn">Send</button>
+    </div>
+    <!-- Toggle button for side panel on the right edge of mainPanel -->
+    <button id="sidePanelToggleButton">Hide Panel</button>
+    <!-- Account icon anchored at top right -->
+    <i id="accountIcon" class="fas fa-user-circle"></i>
+  </div>
+  
+  <div id="sidePanel">
+    <h3>Conversations</h3>
+    <!-- New Chat button (hidden until login) -->
+    <button id="newChatBtn">New Chat</button>
+    <p>Click a conversation to load its history:</p>
+    <ul id="chatList"></ul>
+    <div id="loginOptions">
+      <h3>Login</h3>
+      <form id="loginForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" />
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" />
+        <button type="button" id="loginButton">Login</button>
+      </form>
+    </div>
+    <!-- Logout button (visible after login) -->
+    <button id="logoutButton">Logout</button>
+    <!-- Admin panel (remains hidden until an admin logs in) -->
+    <div id="adminPanel">
+      <h3>Admin Controls</h3>
+      <button id="showRegisterFormButton">Register New User</button>
+      <div id="registerFormContainer">
+        <label for="regUsername">Username:</label>
+        <input type="text" id="regUsername" name="regUsername" />
+        <label for="regPassword">Password:</label>
+        <input type="password" id="regPassword" name="regPassword" />
+        <button type="button" id="registerButton">Submit Registration</button>
+        <button type="button" id="cancelRegisterButton">Cancel</button>
+      </div>
+      <p>[Other admin functionalities coming soon]</p>
+    </div>
+  </div>
+  
+  <script>
+    let currentUsername = null;
+    let currentConversationId = null;
+    let isAdmin = false; // Admin flag
+
+    const userInputEl = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const newChatBtn = document.getElementById('newChatBtn');
+    const chatListEl = document.getElementById('chatList');
+    const chatHistoryEl = document.getElementById('chatHistory');
+    const accountIcon = document.getElementById('accountIcon');
+    const loginOptions = document.getElementById('loginOptions');
+    const adminPanel = document.getElementById('adminPanel');
+    const logoutButton = document.getElementById('logoutButton');
+    const sidePanelToggleButton = document.getElementById('sidePanelToggleButton');
+
+    // Registration form elements in admin panel
+    const showRegisterFormButton = document.getElementById('showRegisterFormButton');
+    const registerFormContainer = document.getElementById('registerFormContainer');
+    const registerButton = document.getElementById('registerButton');
+    const cancelRegisterButton = document.getElementById('cancelRegisterButton');
+
+    // Default placeholder for the input field
+    const defaultPlaceholder = "Type your design-related question here...";
+
+    // Instead of pop-up messages, update the input placeholder for notifications.
+    function showMessage(message) {
+      userInputEl.placeholder = message;
+      userInputEl.value = "";
+      setTimeout(() => {
+        userInputEl.placeholder = defaultPlaceholder;
+      }, 3000);
+    }
+
+    function updateChatControls() {
+      if (!currentUsername) {
+        userInputEl.disabled = true;
+        sendBtn.disabled = true;
+        newChatBtn.disabled = true;
+      } else {
+        newChatBtn.disabled = false;
+        if (!currentConversationId) {
+          userInputEl.disabled = true;
+          sendBtn.disabled = true;
+        } else {
+          userInputEl.disabled = false;
+          sendBtn.disabled = false;
+        }
+      }
+    }
+
+    function setLoadingState(isLoading) {
+      const elements = [sendBtn, userInputEl, newChatBtn];
+      if (isLoading) {
+        elements.forEach(el => { if (el) el.disabled = true; });
+        document.getElementById('mainPanel').classList.add('pulsate');
+      } else {
+        updateChatControls();
+        document.getElementById('mainPanel').classList.remove('pulsate');
+      }
+    }
+
+    function updateAccountIcon(username) {
+      const initials = username.split(' ').map(n => n[0]).join('').toUpperCase();
+      accountIcon.textContent = initials;
+      accountIcon.classList.remove('fas', 'fa-user-circle');
+      accountIcon.style.backgroundColor = getRandomColor();
+      accountIcon.style.color = '#fff';
+      accountIcon.style.borderRadius = '50%';
+      accountIcon.style.padding = '8px';
+      accountIcon.style.fontSize = '20px';
+      accountIcon.style.cursor = 'pointer';
+    }
+
+    function getRandomColor() {
+      const letters = '0123456789ABCDEF';
+      let color = '#';
+      for (let i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+    }
+
+    function updateAdminPanel() {
+      // Only show admin panel if user is an admin
+      adminPanel.style.display = isAdmin ? 'block' : 'none';
+    }
+
+    async function loginUser() {
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const username = usernameInput.value.trim();
+      const password = passwordInput.value.trim();
+
+      if (!username || !password) {
+        showMessage("Please fill in both username and password.");
+        return;
+      }
+
+      try {
+        const response = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+        currentUsername = username;
+        isAdmin = username.toLowerCase().includes('admin');
+        updateAccountIcon(username);
+        showMessage('Login successful!');
+        await refreshConversationList();
+        updateChatControls();
+        updateAdminPanel();
+        loginOptions.style.display = 'none';
+        logoutButton.style.display = 'block';
+        newChatBtn.style.display = 'block';
+        sidePanelToggleButton.style.display = 'block';
+      } catch (error) {
+        console.error('Failed to login user:', error);
+        showMessage('Login failed. Please try again.');
+      }
+    }
+
+    async function refreshConversationList() {
+      try {
+        if (!currentUsername) return;
+        const response = await fetch('/conversations?username=' + encodeURIComponent(currentUsername));
+        if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+        const convos = await response.json();
+        chatListEl.innerHTML = '';
+        convos.forEach(convo => {
+          const listItem = document.createElement('li');
+          listItem.id = convo.conversation_id;
+          const truncated = convo.first_message.substring(0, 50);
+          listItem.innerHTML = `<strong>${truncated}</strong>`;
+          listItem.addEventListener('click', () => loadConversation(convo.conversation_id));
+          chatListEl.appendChild(listItem);
+        });
+      } catch (error) {
+        console.error('Failed to refresh conversation list:', error);
+      }
+    }
+
+    function displayMessage(role, content, messageId) {
+      const bubble = document.createElement('div');
+      bubble.classList.add('chat-bubble', role === 'user' ? 'user-bubble' : 'assistant-bubble');
+      const textSpan = document.createElement('span');
+      textSpan.textContent = content;
+      bubble.appendChild(textSpan);
+      
+      // Add feedback stars only if:
+      // - Role is 'assistant'
+      // - messageId is provided
+      // - This isn't the first assistant message (chatHistory already has content)
+      if (role === 'assistant' && messageId && chatHistoryEl.childElementCount > 0) {
+        const feedbackContainer = document.createElement('div');
+        feedbackContainer.classList.add('feedback-container');
+        feedbackContainer.style.marginTop = '5px';
+        for (let i = 1; i <= 5; i++) {
+          const star = document.createElement('span');
+          star.textContent = '☆';
+          star.style.fontSize = '20px';
+          star.style.cursor = 'pointer';
+          star.style.marginRight = '5px';
+          star.addEventListener('click', () => {
+            const stars = feedbackContainer.querySelectorAll('span');
+            stars.forEach((s, index) => {
+              s.textContent = index < i ? '★' : '☆';
+              s.style.color = index < i ? '#FFD700' : '#ccc';
+              s.style.pointerEvents = 'none';
+            });
+            sendFeedback(messageId, i);
+          });
+          feedbackContainer.appendChild(star);
+        }
+        bubble.appendChild(feedbackContainer);
+      }
+      chatHistoryEl.appendChild(bubble);
+      chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+    }
+
+    async function sendFeedback(messageId, rating) {
+      try {
+        const response = await fetch('/feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message_id: messageId, rating: rating })
+        });
+        if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+      } catch (error) {
+        console.error('Failed to submit feedback:', error);
+      }
+    }
+
+    sendBtn.addEventListener('click', async () => {
+      const userText = userInputEl.value.trim();
+      if (!userText) return;
+      if (!currentUsername) {
+        showMessage("Please log in first.");
+        return;
+      }
+      if (!currentConversationId) {
+        showMessage("Start a new conversation or load one.");
+        return;
+      }
+      const designKeywords = [
+  // General Design & Creativity
+  "design", "ui", "ux", "layout", "aesthetic", "graphic", "architect",
+  "visual", "creative", "branding", "typography", "illustration",
+  "composition", "mockup", "prototype", "wireframe", "interface",
+  "user experience", "user interface", "color theory", "animation",
+  "CAD", "rendering", "3D modeling", "sketch", "storyboarding",
+  "concept art", "digital art", "materials", "industrial design",
+  "ergonomics", "form factor", "manufacturing", "engineering",
+  "digital interface", "usability", "interaction design", "web design",
+  "motion graphics", "responsive design", "visual hierarchy",
+  "gestalt principles", "iconography", "minimalist design", 
+  "art direction", "photo editing", "vector graphics", "branding identity",
+  "mood board", "composition balance", "user-centered design", 
+  "heuristic evaluation", "cognitive load", "affordance", 
+  "skeuomorphism", "flat design", "material design", "grid system",
+  "adaptive design", "data visualization", "pixel-perfect", "3D rendering",
+  "scalability", "contrast", "prototype testing", "design thinking",
+  "Figma", "Sketch", "Photoshop", "Illustrator", "After Effects",
+
+  // Lens Design & Optics
+  "optics", "lens", "coatings", "light refraction", "light dispersion",
+  "focal length", "aperture", "glass formulations", "photochromic", 
+  "anti-reflective", "polarization", "spectacle", "optical clarity", 
+  "refractive index", "blue light filter", "UV protection", 
+  "optical engineering", "prescription lenses", "aspheric design", 
+  "lens aberrations", "light transmission", "prism correction",
+  "wavefront technology", "freeform optics", "multi-focal lens",
+  "single vision", "progressive lens", "high-index lenses",
+  "thermoplastic lenses", "hydrophobic coating", "scratch-resistant coating",
+  "lens curvature", "convex lens", "concave lens", "anti-glare",
+  "chromatic aberration", "light diffraction", "optical metrology",
+  "bifocal", "trifocal", "photo-optical materials", "optical lens design software",
+  "light field technology", "AR/VR lenses", "holographic optics",
+  "nanophotonics", "optical filters", "gradient index optics",
+  "Fresnel lens", "diffractive optics", "ophthalmic optics",
+  "laser optics", "infrared optics", "polarized film", "lens surfacing",
+  "ophthalmic formulation", "adaptive lenses", "electrochromic lenses",
+  "nano-coated optics", "infrared-blocking", "micro-optics", "retinal imaging",
+
+  // Product Security & Anti-Counterfeit
+  "tamper-proof", "anti-counterfeit", "holographic security", 
+  "RFID", "QR code security", "watermarking", "blockchain verification",
+  "biometric authentication", "product traceability", "supply chain security",
+  "encryption", "IP protection", "serial coding", "digital fingerprint",
+  "forensic marking", "authentication label", "covert security", 
+  "visible and invisible security features", "product tagging",
+  "tamper-evident", "hologram labels", "microtext", "UV ink",
+  "chemical etching", "smart packaging", "nano-security", "holographic embossing",
+  "radio-frequency identification", "DNA tagging", "microprinting",
+  "security seals", "invisible barcodes", "authentication chips",
+  "digital signatures", "geolocation tracking", "NFC tags",
+  "authentication holograms", "supply chain verification",
+  "tamper-resistant enclosures", "blockchain for supply chain",
+  "secure serialization", "electronic pedigree", "laser-engraved security",
+  "customized serial numbers", "anti-forgery", "digital watermarking",
+  "steganography", "covert marking technology", "RF protection",
+  "deep learning-based authentication", "automated verification",
+  "biometric tracking", "optical security features",
+  "forensic traceability", "cyber-physical security", "real-time tracking",
+  "smart labels", "crypto-based authentication", "data matrix codes",
+  "radio tagging", "authentication infrastructure", "anti-tamper",
+  "3D holographic security", "sensor-enabled packaging",
+  "AI-based forgery detection", "tamper detection technologies",
+  "industrial security standards", "supply chain transparency"
+];
+      const isDesignRelated = designKeywords.some(keyword => userText.toLowerCase().includes(keyword));
+      if (!isDesignRelated) {
+        showMessage("Please ask a design-related question.");
+        return;
+      }
+      displayMessage('user', userText);
+      userInputEl.value = "";
+      setLoadingState(true);
+      try {
+        const response = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userText, username: currentUsername, conversation_id: currentConversationId })
+        });
+        const data = await response.json();
+        displayMessage('assistant', data.response, data.messageId);
+      } catch (error) {
+        console.error('Failed to send message:', error);
+      }
+      setLoadingState(false);
+    });
+
+    newChatBtn.addEventListener('click', async () => {
+      if (!currentUsername) {
+        showMessage("Please log in to start a new conversation.");
+        return;
+      }
+      setLoadingState(true);
+      try {
+        const response = await fetch('/new_chat?username=' + encodeURIComponent(currentUsername), { method: 'GET' });
+        if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+        const data = await response.json();
+        currentConversationId = data.conversation_id;
+        chatHistoryEl.innerHTML = '';
+        // Display the intro message without a messageId (no feedback stars)
+        displayMessage('assistant', data.response);
+        await refreshConversationList();
+        updateChatControls();
+      } catch (error) {
+        console.error('Failed to start new conversation:', error);
+      }
+      setLoadingState(false);
+    });
+
+    async function loadConversation(conversationId) {
+      try {
+        const response = await fetch('/loadConversation?conversation_id=' + encodeURIComponent(conversationId));
+        if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+        const conversation = await response.json();
+        chatHistoryEl.innerHTML = '';
+        conversation.forEach(msg => displayMessage(msg.role, msg.content, msg.chat_id));
+        currentConversationId = conversationId;
+        updateChatControls();
+      } catch (error) {
+        console.error('Failed to load conversation:', error);
+      }
+    }
+
+    function logoutUser() {
+      currentUsername = null;
+      isAdmin = false;
+      currentConversationId = null;
+      updateChatControls();
+      newChatBtn.style.display = 'none';
+      adminPanel.style.display = 'none';
+      logoutButton.style.display = 'none';
+      sidePanelToggleButton.style.display = 'none';
+      chatHistoryEl.innerHTML = '';
+      chatListEl.innerHTML = '';
+      loginOptions.style.display = 'block';
+      accountIcon.textContent = '';
+      showMessage("You have been logged out.");
+    }
+
+    logoutButton.addEventListener('click', logoutUser);
+
+    sidePanelToggleButton.addEventListener('click', function() {
+      const sidePanel = document.getElementById('sidePanel');
+      if (sidePanel.style.display === 'none' || sidePanel.style.display === '') {
+        sidePanel.style.display = 'block';
+        sidePanelToggleButton.textContent = 'Hide Panel';
+      } else {
+        sidePanel.style.display = 'none';
+        sidePanelToggleButton.textContent = 'Show Panel';
+      }
+    });
+
+    userInputEl.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendBtn.click();
+      }
+    });
+
+    document.getElementById('loginButton').addEventListener('click', loginUser);
+    accountIcon.addEventListener('click', () => {
+      if (!currentUsername) {
+        loginOptions.style.display = loginOptions.style.display === 'none' ? 'block' : 'none';
+      }
+    });
+
+    showRegisterFormButton.addEventListener('click', () => {
+      registerFormContainer.style.display = 'block';
+    });
+
+    cancelRegisterButton.addEventListener('click', () => {
+      registerFormContainer.style.display = 'none';
+    });
+
+    async function registerUser() {
+      const regUsername = document.getElementById('regUsername').value.trim();
+      const regPassword = document.getElementById('regPassword').value.trim();
+      if (!regUsername || !regPassword) {
+        showMessage("Please provide both username and password.");
+        return;
+      }
+      try {
+        const response = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: regUsername, password: regPassword })
+        });
+        if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+        showMessage(`User "${regUsername}" registered successfully!`);
+        registerFormContainer.style.display = 'none';
+      } catch (error) {
+        console.error('Failed to register user:', error);
+        showMessage('Registration failed. Please try again.');
+      }
+    }
+
+    registerButton.addEventListener('click', registerUser);
+
+    (async function initializeApp() {
+      await refreshConversationList();
+      updateChatControls();
+    })();
+  </script>
+</body>
+</html>
